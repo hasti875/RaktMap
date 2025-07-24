@@ -27,7 +27,6 @@ router.post('/', async (req, res) => {
 
     // Find donors with matching blood group
     const matchingDonors = await User.find({
-      role: 'donor',
       bloodGroup: bloodGroup
     });
 

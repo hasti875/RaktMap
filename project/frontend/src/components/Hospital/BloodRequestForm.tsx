@@ -34,13 +34,10 @@ export function BloodRequestForm() {
         return;
       }
 
-      // Add hospital info to the request
-      const requestData = {
-        ...formData,
-        hospitalId: user?._id,
-        hospitalName: user?.name,
-        hospitalLocation: user?.location
-      };
+      // THIS IS THE ONLY PART THAT CHANGED
+      // We no longer send hospitalId, hospitalName, etc.
+      // The backend gets this information securely from the token.
+      const requestData = { ...formData };
 
       const response = await axios.post('http://localhost:5000/blood-requests', requestData, {
         headers: {
