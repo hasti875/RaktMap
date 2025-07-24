@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const bloodRequestsRouter = require('./routes/bloodRequests');
+const User = require('./models/User');
 
 const app = express();
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -24,15 +25,8 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', () => console.log('MongoDB connected'));
 
 // 2. Define User schema/model
-const userSchema = new mongoose.Schema({
-  email: { type: String, unique: true },
-  password: String,
-  role: String,
-  name: String,
-  bloodGroup: String,
-  phone: String
-});
-const User = mongoose.model('User', userSchema);
+
+
 
 const SECRET = 'your_jwt_secret'; // Use env var in production
 

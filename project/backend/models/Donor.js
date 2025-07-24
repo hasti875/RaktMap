@@ -13,10 +13,16 @@ const donorSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  rollNo: {
+    type: String,
+    trim: true
+  },
   bloodGroup: {
     type: String,
     required: true,
+    // --- THIS LINE IS UPDATED ---
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'NK'],
+    // --------------------------
     uppercase: true,
     trim: true
   },
