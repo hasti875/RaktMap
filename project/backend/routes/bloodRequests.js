@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const BloodRequest = require('../models/BloodRequest');
 const User = require('../models/User'); // 1. IMPORT THE USER MODEL
+const Donor = require('../models/Donor'); // Ensure this line is present
 const { sendSMS } = require('../services/smsService');
 
 // Create a new blood request
@@ -21,13 +22,31 @@ router.post('/', async (req, res) => {
       patientAge,
       patientCondition
     });
-//...
 
     await bloodRequest.save();
 
-    // Find donors with matching blood group
-    const matchingDonors = await User.find({
-      bloodGroup: bloodGroup
+    // Debug: Log normalized blood group
+    const normalizedBloodGroup = bloodGroup.replace(/\s+/g, '').toUpperCase();
+    console.log('Normalized requested blood group:', normalizedBloodGroup);
+
+    // Fetch all donors and filter in JS for normalized blood group match
+    const allDonors = await Donor.find({});
+    allDonors.forEach(donor => {
+      const donorBloodGroup = donor["Blood Group"] || donor.bloodGroup;
+      if (!donorBloodGroup) {
+        console.warn(`Donor missing Blood Group:`, donor);
+        return;
+      }
+      const donorNormalized = donorBloodGroup.replace(/\s+/g, '').toUpperCase();
+      const donorName = donor["Student Name"] || donor.name || '[no name]';
+      console.log(`Donor: ${donorName}, Raw: "${donorBloodGroup}", Normalized: "${donorNormalized}"`);
+    });
+
+    const matchingDonors = allDonors.filter(donor => {
+      const donorBloodGroup = donor["Blood Group"] || donor.bloodGroup;
+      if (!donorBloodGroup) return false;
+      const donorNormalized = donorBloodGroup.replace(/\s+/g, '').toUpperCase();
+      return donorNormalized === normalizedBloodGroup;
     });
 
     console.log(`Found ${matchingDonors.length} matching donors for blood group ${bloodGroup}`);
@@ -42,13 +61,15 @@ router.post('/', async (req, res) => {
     // Send SMS to each matching donor
     let smsSuccessCount = 0;
     for (const donor of matchingDonors) {
-      if (donor.phone) {
+      const donorName = donor["Student Name"] || donor.name || '[no name]';
+      const donorPhone = donor["Mobile No"] || donor.phone;
+      if (donorPhone) {
         try {
-          await sendSMS(donor.phone, message);
+          await sendSMS(donorPhone, message);
           smsSuccessCount++;
-          console.log(`SMS sent successfully to donor: ${donor.name} (${donor.phone})`);
+          console.log(`SMS sent successfully to donor: ${donorName} (${donorPhone})`);
         } catch (error) {
-          console.error(`Failed to send SMS to donor ${donor.name}:`, error);
+          console.error(`Failed to send SMS to donor ${donorName}:`, error);
         }
       }
     }
